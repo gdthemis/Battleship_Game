@@ -64,6 +64,7 @@
               <items>
                 <MenuItem fx:id="enemy_ships_id" mnemonicParsing="false" onAction="#enemy_ships_controller" text="Enemy Ships" />
                 <MenuItem fx:id="ppm_id" mnemonicParsing="false" onAction="#ppm_controller" text="Player Past Moves" />
+                  <MenuItem fx:id="epm_id" mnemonicParsing="false" onAction="#epm_controller" text="Enemy Past Moves" />
                   <MenuItem fx:id="ps_id" mnemonicParsing="false" onAction="#ps_controller" text="Player Ships" />
               </items>
             </MenuButton>

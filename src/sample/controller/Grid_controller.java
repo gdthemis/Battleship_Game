@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ThreadLocalRandom;
 
+
 public class Grid_controller implements Initializable{
 
     @FXML
@@ -94,6 +95,7 @@ public class Grid_controller implements Initializable{
 
 
     @Override
+
     public void initialize(URL url, ResourceBundle resourceBundle) {
         person = new Player();
         pc = new Player();
@@ -110,6 +112,7 @@ public class Grid_controller implements Initializable{
     }
 
     @FXML
+
     public void submit_move_controller(javafx.event.ActionEvent e){
         if (!has_started)
         {
@@ -229,6 +232,11 @@ public class Grid_controller implements Initializable{
         }
     }
 
+    /**
+     * This Void updates the player grid based on the coordinates they entered
+     * @param x_axis : int, x axis coordinate
+     * @param y_axis : int, y axis coordinate
+     */
     private void update(int x_axis, int y_axis) {
         int rest = person.remaining_hits - 1;
         person.remaining_hits -= 1;
@@ -252,6 +260,9 @@ public class Grid_controller implements Initializable{
 
     }
 
+    /**
+     * This Void updates the enemy
+     */
     private void update_pc() {
 
         if(!_was_miss)
@@ -301,6 +312,12 @@ public class Grid_controller implements Initializable{
         comp_ratio.setText(Double.toString((1.0*pc.hits/(40 - pc.remaining_hits))*100) + " %");
     }
 
+    /**
+     * This Void updates the enemy and it's purpose is to sink a ship that descovered with random moves.
+     * @param x : int, the x parameter that will hit. It may change inside the void.
+     * @param y : int, the y parameter that will hit. It may change inside the void.
+     * @param type : int, it referes to the type of ship that was descovered.
+     */
     private void sink_the_ship(int x, int y, int type) {
 
         pc.remaining_hits -= 1;
@@ -380,6 +397,12 @@ public class Grid_controller implements Initializable{
 
     }
 
+    /**
+     *This function returns the valid neighbors of a cell.
+     * @param x : int, x coordinate of cell.
+     * @param y : int, y coordinate of cell.
+     * @return : an array with all the valid neighbours.
+     */
     private ArrayList<ArrayList<Integer>> _get_neighbs (int x, int y)
     {
         ArrayList<ArrayList<Integer>> neighbs = new ArrayList<>();
@@ -420,6 +443,13 @@ public class Grid_controller implements Initializable{
         _isLoaded = true;
     }
 
+    /**
+     * This Function reades the text file that has the input
+     * @param text : it determines in which scenario we are.
+     * @param decider : it decides which text we are reading (enemy or player)
+     * @return : an array with the file.
+     * @throws Exception
+     */
     private char[][] reader (String text, String decider) throws Exception {
         String path = "/Users/georgiosthemelis/IdeaProjects/proj3/project10/src/sample/scenario_" + text;
 
@@ -462,6 +492,11 @@ public class Grid_controller implements Initializable{
         }
     }
 
+    /**
+     * This function makes a pop-up with enemy ships condition.
+     * @param actionEvent
+     * @throws IOException
+     */
     public void enemy_ships_controller(ActionEvent actionEvent) throws IOException {
         Stage newStage = new Stage();
         VBox comp = new VBox();
@@ -503,6 +538,11 @@ public class Grid_controller implements Initializable{
 
     }
 
+    /**
+     * This void makes a pop-up with player ships condition.
+     * @param actionEvent
+     * @throws IOException
+     */
     public void ps_controller(ActionEvent actionEvent) throws IOException {
         Stage newStage = new Stage();
         VBox comp = new VBox();
@@ -544,7 +584,43 @@ public class Grid_controller implements Initializable{
 
     }
 
+    /**
+     * This void makes a pop-up with Player's past moves.
+     * @param actionEvent
+     * @throws IOException
+     */
     public void ppm_controller(ActionEvent actionEvent) throws IOException {
+        Stage newStage = new Stage();
+        VBox comp = new VBox();
+        comp.getChildren().add(new Text("Last 5 Moves :"));
+
+        for (int i = 0; i < Math.min(5,person.past_moves.size()); i++)
+        {
+            String s = "x : " + Integer.toString(person.past_moves.get(person.past_moves.size() - 1 - i).x)
+                    + ", y : " + Integer.toString(person.past_moves.get(person.past_moves.size() - 1 - i).y)
+                    + ", " + (person.past_moves.get(person.past_moves.size() - 1 - i).miss_or_hit ? "hit" : "miss")
+                    + ", " + Integer.toString(person.past_moves.get(person.past_moves.size() - 1 - i).type);
+            Text nameField = new Text(s);
+            comp.getChildren().add(nameField);
+        }
+
+        String s = "Last line is the codename for each ship : \n 1 : carrier, 2 : Battleship, 3 : Cruiser, 4 : Submarine, 5 : Destroyer";
+        Text nameField = new Text(s);
+        comp.getChildren().add(nameField);
+
+        Scene stageScene = new Scene(comp, 400, 300);
+        newStage.setScene(stageScene);
+        newStage.setTitle("Past Player Moves");
+        newStage.show();
+
+    }
+
+    /**
+     * This void makes a pop-up with enemy's last moves.
+     * @param actionEvent
+     * @throws IOException
+     */
+    public void epm_controller(ActionEvent actionEvent) throws IOException {
         Stage newStage = new Stage();
         VBox comp = new VBox();
         comp.getChildren().add(new Text("Last 5 Moves :"));
@@ -559,9 +635,13 @@ public class Grid_controller implements Initializable{
             comp.getChildren().add(nameField);
         }
 
-        Scene stageScene = new Scene(comp, 300, 300);
+        String s = "Last line is the codename for each ship : \n 1 : carrier, 2 : Battleship, 3 : Cruiser, 4 : Submarine, 5 : Destroyer";
+        Text nameField = new Text(s);
+        comp.getChildren().add(nameField);
+
+        Scene stageScene = new Scene(comp, 400, 300);
         newStage.setScene(stageScene);
-        newStage.setTitle("Past Player Moves");
+        newStage.setTitle("Past Enemy Moves");
         newStage.show();
 
     }
