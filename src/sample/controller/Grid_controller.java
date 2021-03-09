@@ -95,7 +95,9 @@ public class Grid_controller implements Initializable{
 
 
     @Override
-
+/**
+ * Initialize function.
+ */
     public void initialize(URL url, ResourceBundle resourceBundle) {
         person = new Player();
         pc = new Player();
@@ -112,7 +114,9 @@ public class Grid_controller implements Initializable{
     }
 
     @FXML
-
+/**
+ * This function is called when the button submit is pressed, and controlls what will happen next.
+ */
     public void submit_move_controller(javafx.event.ActionEvent e){
         if (!has_started)
         {
@@ -193,6 +197,9 @@ public class Grid_controller implements Initializable{
     }
 
     @FXML
+    /**
+     * This function is called when start button is pressed. It is supposed to start or restart the game.
+     */
     public void start_controller(javafx.event.ActionEvent e){
         if (_isLoaded) {
             if (has_started) {
@@ -438,6 +445,9 @@ public class Grid_controller implements Initializable{
 
 
     @FXML
+    /**
+     * This Void is called when the load button is pressed. It loads a player scenario.
+     */
     public void load_action(javafx.event.ActionEvent e) throws Exception {
 
         TextInputDialog item = new TextInputDialog();
