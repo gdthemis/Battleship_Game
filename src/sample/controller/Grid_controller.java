@@ -12,7 +12,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import sample.model.Grid;
 import sample.model.Player;
 import sample.model.Quartet;
 
@@ -28,7 +27,11 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ThreadLocalRandom;
 
-
+/**
+ * This class is the controller of the program. Contains almost all the controllers of the project
+ *
+ * @author Georgios Themelis
+ */
 public class Grid_controller implements Initializable{
 
     @FXML
@@ -73,17 +76,12 @@ public class Grid_controller implements Initializable{
     @FXML
     public MenuItem start_id;
 
-
     private boolean _was_miss = true;
     private int next_x = -10;
     private int next_y = -10;
 
-    private char[][] _player;
-    private char[][] _enemy;
     public Player person, pc;
     private boolean has_started = false;
-    private boolean _first_move = false;
-    private int random;
 
     private boolean _isLoaded = false;
 
@@ -93,11 +91,12 @@ public class Grid_controller implements Initializable{
 
     private boolean _game_ended = false;
 
-
+    /**
+     * Initializer
+     * @param url : parameter
+     * @param resourceBundle : parameter
+     */
     @Override
-/**
- * Initialize function.
- */
     public void initialize(URL url, ResourceBundle resourceBundle) {
         person = new Player();
         pc = new Player();
@@ -113,11 +112,11 @@ public class Grid_controller implements Initializable{
         }
     }
 
+    /**
+     * This void is called when submit button is pressed, and handles the response.
+     */
     @FXML
-/**
- * This function is called when the button submit is pressed, and controlls what will happen next.
- */
-    public void submit_move_controller(javafx.event.ActionEvent e){
+    public void submit_move_controller(){
         if (!has_started)
         {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -136,50 +135,34 @@ public class Grid_controller implements Initializable{
             return;
         }
 
-            update(Integer.parseInt(row_id.getText().toString()), Integer.parseInt(column_id.getText().toString()));
+            update(Integer.parseInt(row_id.getText()), Integer.parseInt(column_id.getText()));
             update_pc();
 
 
-            if (pc.remaining_hits == 0)
+            if (pc.remaining_hits <= 0 && person.remaining_hits <= 0)
             {
                 if (pc.points < person.points) {
                     Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                     alert.setTitle("Your moves ended, player wins");
-                    alert.setContentText("Player Won");
+                    alert.setContentText("Player Won, as he has more points");
                     alert.showAndWait();
                 }
                 else{
                     Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Your moves ended, pc wins, as it has more points");
-                    alert.setContentText("Pc Won");
+                    alert.setTitle("Your moves ended");
+                    alert.setContentText("Pc wins, as it has more points");
                     alert.showAndWait();
                 }
                 _game_ended = true;
                 return;
             }
 
-        if (person.remaining_hits == 0)
-        {
-            if (pc.points < person.points) {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Your moves ended, player wins");
-                alert.setContentText("Player Won, as you have more points");
-                alert.showAndWait();
-            }
-            else{
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Your moves ended, pc wins");
-                alert.setContentText("Pc Won, as it has more points");
-                alert.showAndWait();
-            }
-            return;
-        }
 
         if (person.points == 5200)
         {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("You won");
-            alert.setContentText("You sinked all ships, so you are the winner!");
+            alert.setContentText("You sunk all ships, so you are the winner!");
             alert.showAndWait();
             _game_ended = true;
             return;
@@ -189,18 +172,17 @@ public class Grid_controller implements Initializable{
         {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("You lost");
-            alert.setContentText("Pc sinked all your ships, so you lose!");
+            alert.setContentText("Pc sunk all your ships, so you lose!");
             alert.showAndWait();
             _game_ended = true;
-            return;
         }
     }
 
-    @FXML
     /**
      * This function is called when start button is pressed. It is supposed to start or restart the game.
      */
-    public void start_controller(javafx.event.ActionEvent e){
+    @FXML
+    public void start_controller(){
         if (_isLoaded) {
             if (has_started) {
                 person = new Player();
@@ -212,8 +194,8 @@ public class Grid_controller implements Initializable{
                 next_y = -10;
                 _game_ended = false;
                 player_points.setText(Integer.toString(person.points));
-                player_ratio.setText(Double.toString((1.0*person.hits/(40 - person.remaining_hits))*100) + " %");
-                comp_ratio.setText(Double.toString((1.0*pc.hits/(40 - pc.remaining_hits))*100) + " %");
+                player_ratio.setText((1.0 * person.hits / (40 - person.remaining_hits)) * 100 + " %");
+                comp_ratio.setText((1.0 * pc.hits / (40 - pc.remaining_hits)) * 100 + " %");
                 comp_attempts.setText(Integer.toString(40 - pc.remaining_hits));
 
                 for (int i = 0; i < 10; i++) {
@@ -228,8 +210,7 @@ public class Grid_controller implements Initializable{
 
             if (_isLoaded) {
 
-                random = ThreadLocalRandom.current().nextInt(0, 3);
-                _first_move = true;
+                int random = ThreadLocalRandom.current().nextInt(0, 3);
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("First Move");
                 if (random == 0)
@@ -261,7 +242,6 @@ public class Grid_controller implements Initializable{
      * @param y_axis : int, y axis coordinate
      */
     private void update(int x_axis, int y_axis) {
-        int rest = person.remaining_hits - 1;
         person.remaining_hits -= 1;
         player_attempts.setText(Integer.toString(40 - person.remaining_hits));
 
@@ -279,7 +259,7 @@ public class Grid_controller implements Initializable{
             person.update_after_hit(x_axis, y_axis, false);
         }
         person.past_moves.add(new Quartet(x_axis, y_axis, res == 0 ? false : true, res));
-        player_ratio.setText(Double.toString((1.0*person.hits/(40 - person.remaining_hits))*100) + " %");
+        player_ratio.setText((1.0 * person.hits / (40 - person.remaining_hits)) * 100 + " %");
 
     }
 
@@ -292,16 +272,15 @@ public class Grid_controller implements Initializable{
         {
             if (it == neighbs.size())
             {
-                sink_the_ship(neighbs.get(it-1).get(0),neighbs.get(it-1).get(1),_last_type);
+                sink_the_ship(neighbs.get(it-1).get(0),neighbs.get(it-1).get(1));
                 return;
             }
 
-            sink_the_ship(neighbs.get(it).get(0),neighbs.get(it).get(1),_last_type);
+            sink_the_ship(neighbs.get(it).get(0),neighbs.get(it).get(1));
 
             return;
         }
 
-        int rest = pc.remaining_hits - 1;
         pc.remaining_hits -= 1;
         comp_attempts.setText(Integer.toString(40 - pc.remaining_hits));
         int y, x;
@@ -332,16 +311,15 @@ public class Grid_controller implements Initializable{
 
 //        float ratio
         pc.past_moves.add(new Quartet(x, y, res == 0 ? false : true, res));
-        comp_ratio.setText(Double.toString((1.0*pc.hits/(40 - pc.remaining_hits))*100) + " %");
+        comp_ratio.setText((1.0 * pc.hits / (40 - pc.remaining_hits)) * 100 + " %");
     }
 
     /**
-     * This Void updates the enemy and it's purpose is to sink a ship that descovered with random moves.
+     * This Void updates the enemy and it's purpose is to sink a ship that discovered with random moves.
      * @param x : int, the x parameter that will hit. It may change inside the void.
      * @param y : int, the y parameter that will hit. It may change inside the void.
-     * @param type : int, it referes to the type of ship that was descovered.
      */
-    private void sink_the_ship(int x, int y, int type) {
+    private void sink_the_ship(int x, int y) {
 
         pc.remaining_hits -= 1;
 
@@ -430,25 +408,25 @@ public class Grid_controller implements Initializable{
     {
         ArrayList<ArrayList<Integer>> neighbs = new ArrayList<>();
         if (x-1 >= 0)
-            neighbs.add(new ArrayList<Integer>(Arrays.asList(x-1, y, 1)));
+            neighbs.add(new ArrayList<>(Arrays.asList(x - 1, y, 1)));
 
         if (x+1 < 10)
-            neighbs.add(new ArrayList<Integer>(Arrays.asList(x+1, y, 2)));
+            neighbs.add(new ArrayList<>(Arrays.asList(x + 1, y, 2)));
 
         if (y-1 >= 0)
-            neighbs.add(new ArrayList<Integer>(Arrays.asList(x, y-1, 3)));
+            neighbs.add(new ArrayList<>(Arrays.asList(x, y - 1, 3)));
 
         if(y+1 < 10)
-            neighbs.add(new ArrayList<Integer>(Arrays.asList(x, y+1, 4)));
+            neighbs.add(new ArrayList<>(Arrays.asList(x, y + 1, 4)));
         return neighbs;
     }
 
-
-    @FXML
     /**
      * This Void is called when the load button is pressed. It loads a player scenario.
+     * @throws Exception : Exception is thrown when there is no such file.
      */
-    public void load_action(javafx.event.ActionEvent e) throws Exception {
+    @FXML
+    public void load_action() throws Exception {
 
         TextInputDialog item = new TextInputDialog();
 
@@ -460,8 +438,8 @@ public class Grid_controller implements Initializable{
 
         String text = file_getter.get();
 
-        _enemy = reader(text, "_enemy");
-        _player = reader(text, "_player");
+        char[][] _enemy = reader(text, "_enemy");
+        char[][] _player = reader(text, "_player");
 
         person.set(_player);
         pc.set(_enemy);
@@ -470,11 +448,11 @@ public class Grid_controller implements Initializable{
     }
 
     /**
-     * This Function reades the text file that has the input
+     * This Function reads the text file that has the input
      * @param text : it determines in which scenario we are.
      * @param decider : it decides which text we are reading (enemy or player)
      * @return : an array with the file.
-     * @throws Exception
+     * @throws Exception : exception is thrown when there is no such file.
      */
     private char[][] reader (String text, String decider) throws Exception {
         String path = "/Users/georgiosthemelis/IdeaProjects/proj3/project10/src/sample/scenario_" + text;
@@ -506,8 +484,11 @@ public class Grid_controller implements Initializable{
         return world;
     }
 
+    /**
+     *This function is called to exit the game.
+     */
     @FXML
-    public void exit_controller(ActionEvent e) throws Exception {
+    public void exit_controller() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Exit");
         alert.setContentText("Are you sure you want to quit?");
@@ -520,10 +501,8 @@ public class Grid_controller implements Initializable{
 
     /**
      * This function makes a pop-up with enemy ships condition.
-     * @param actionEvent
-     * @throws IOException
      */
-    public void enemy_ships_controller(ActionEvent actionEvent) throws IOException {
+    public void enemy_ships_controller() {
         Stage newStage = new Stage();
         VBox comp = new VBox();
         String s;
@@ -566,10 +545,8 @@ public class Grid_controller implements Initializable{
 
     /**
      * This void makes a pop-up with player ships condition.
-     * @param actionEvent
-     * @throws IOException
      */
-    public void ps_controller(ActionEvent actionEvent) throws IOException {
+    public void ps_controller() {
         Stage newStage = new Stage();
         VBox comp = new VBox();
         String s;
@@ -612,20 +589,18 @@ public class Grid_controller implements Initializable{
 
     /**
      * This void makes a pop-up with Player's past moves.
-     * @param actionEvent
-     * @throws IOException
      */
-    public void ppm_controller(ActionEvent actionEvent) throws IOException {
+    public void ppm_controller() {
         Stage newStage = new Stage();
         VBox comp = new VBox();
         comp.getChildren().add(new Text("Last 5 Moves :"));
 
         for (int i = 0; i < Math.min(5,person.past_moves.size()); i++)
         {
-            String s = "x : " + Integer.toString(person.past_moves.get(person.past_moves.size() - 1 - i).x)
-                    + ", y : " + Integer.toString(person.past_moves.get(person.past_moves.size() - 1 - i).y)
+            String s = "x : " + person.past_moves.get(person.past_moves.size() - 1 - i).x
+                    + ", y : " + person.past_moves.get(person.past_moves.size() - 1 - i).y
                     + ", " + (person.past_moves.get(person.past_moves.size() - 1 - i).miss_or_hit ? "hit" : "miss")
-                    + ", " + Integer.toString(person.past_moves.get(person.past_moves.size() - 1 - i).type);
+                    + ", " + person.past_moves.get(person.past_moves.size() - 1 - i).type;
             Text nameField = new Text(s);
             comp.getChildren().add(nameField);
         }
@@ -653,10 +628,10 @@ public class Grid_controller implements Initializable{
 
         for (int i = 0; i < Math.min(5,pc.past_moves.size()); i++)
         {
-            String s = "x : " + Integer.toString(pc.past_moves.get(pc.past_moves.size() - 1 - i).x)
-                    + ", y : " + Integer.toString(pc.past_moves.get(pc.past_moves.size() - 1 - i).y)
+            String s = "x : " + pc.past_moves.get(pc.past_moves.size() - 1 - i).x
+                    + ", y : " + pc.past_moves.get(pc.past_moves.size() - 1 - i).y
                     + ", " + (pc.past_moves.get(pc.past_moves.size() - 1 - i).miss_or_hit ? "hit" : "miss")
-                    + ", " + Integer.toString(pc.past_moves.get(pc.past_moves.size() - 1 - i).type);
+                    + ", " + pc.past_moves.get(pc.past_moves.size() - 1 - i).type;
             Text nameField = new Text(s);
             comp.getChildren().add(nameField);
         }
