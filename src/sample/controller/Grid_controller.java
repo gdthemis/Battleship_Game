@@ -138,22 +138,37 @@ public class Grid_controller implements Initializable{
 
             if (pc.remaining_hits == 0)
             {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Your moves ended, player wins");
-                alert.setContentText("Player Won");
-                alert.showAndWait();
+                if (pc.points < person.points) {
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Your moves ended, player wins");
+                    alert.setContentText("Player Won");
+                    alert.showAndWait();
+                }
+                else{
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Your moves ended, pc wins, as it has more points");
+                    alert.setContentText("Pc Won");
+                    alert.showAndWait();
+                }
                 _game_ended = true;
-
+                return;
             }
 
         if (person.remaining_hits == 0)
         {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Your moves ended, pc wins");
-            alert.setContentText("Pc Won");
-            alert.showAndWait();
-            _game_ended = true;
-
+            if (pc.points < person.points) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Your moves ended, player wins");
+                alert.setContentText("Player Won, as you have more points");
+                alert.showAndWait();
+            }
+            else{
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Your moves ended, pc wins");
+                alert.setContentText("Pc Won, as it has more points");
+                alert.showAndWait();
+            }
+            return;
         }
 
         if (person.points == 5200)
@@ -163,7 +178,7 @@ public class Grid_controller implements Initializable{
             alert.setContentText("You sinked all ships, so you are the winner!");
             alert.showAndWait();
             _game_ended = true;
-
+            return;
         }
 
         if (pc.points == 5200)
@@ -173,6 +188,7 @@ public class Grid_controller implements Initializable{
             alert.setContentText("Pc sinked all your ships, so you lose!");
             alert.showAndWait();
             _game_ended = true;
+            return;
         }
     }
 
