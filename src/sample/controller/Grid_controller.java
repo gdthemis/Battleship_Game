@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ThreadLocalRandom;
@@ -72,8 +74,8 @@ public class Grid_controller implements Initializable{
 
 
     private boolean _was_miss = true;
-    private int _old_x;
-    private int _old_y;
+    private int next_x = -10;
+    private int next_y = -10;
 
     private char[][] _player;
     private char[][] _enemy;
@@ -83,6 +85,10 @@ public class Grid_controller implements Initializable{
     private int random;
 
     private boolean _isLoaded = false;
+
+    private ArrayList<ArrayList<Integer>> neighbs;
+    private int _last_type;
+    private int it = 0;
 
 
     @Override
@@ -226,6 +232,16 @@ public class Grid_controller implements Initializable{
 
     private void update_pc() {
 
+        if(!_was_miss)
+        {
+            if (it == neighbs.size())
+                it--;
+
+            sink_the_ship(neighbs.get(it).get(0),neighbs.get(it).get(1),_last_type);
+
+            return;
+        }
+
         int rest = pc.remaining_hits - 1;
         pc.remaining_hits -= 1;
         comp_attempts.setText(Integer.toString(40 - pc.remaining_hits));
@@ -245,6 +261,11 @@ public class Grid_controller implements Initializable{
 //            System.out.println(pc.points);
             comp_points.setText(Integer.toString(pc.points));
             pc.hits += 1;
+            neighbs = new ArrayList<>();
+            neighbs = _get_neighbs(x, y);
+            _was_miss = false;
+            _last_type= res;
+            it = 0;
         }
         else {
             person.update_after_hit_enemy(x, y, false);
@@ -253,6 +274,102 @@ public class Grid_controller implements Initializable{
 //        float ratio
         pc.past_moves.add(new Quartet(x, y, res == 0 ? false : true, res));
         comp_ratio.setText(Double.toString((1.0*pc.hits/(40 - pc.remaining_hits))*100) + " %");
+    }
+
+    private void sink_the_ship(int x, int y, int type) {
+
+        pc.remaining_hits -= 1;
+
+
+        if(next_x != -10 && next_y != -10)
+        {
+            x = next_x;
+            y = next_y;
+            if (x < 0 || x > 9 || y < 0 || y > 9 || person.my_grid.get_cell(x, y).isHitted())
+            {
+                next_y = -10;
+                next_x = -10;
+            }
+
+        }
+
+        if (next_x == -10 && next_y == -10){
+            do {
+                x = neighbs.get(it).get(0);
+                y = neighbs.get(it).get(1);
+                it++;
+            } while (person.my_grid.get_cell(x, y).isHitted() && it < neighbs.size());
+        }
+
+        comp_attempts.setText(Integer.toString(40 - pc.remaining_hits));
+
+        int res = person.hit(x, y);
+
+        if (res > 0) {
+            person.update_after_hit_enemy(x, y,true);
+            int temp = person.update(x, y, true, res);
+            pc.points += temp;
+//            System.out.println(pc.points);
+            comp_points.setText(Integer.toString(pc.points));
+            pc.hits += 1;
+//            neighbs = new ArrayList<>();
+//            neighbs = _get_neighbs(x, y);
+//            _was_miss = false;
+//            _last_type= res;
+//            it = 0;
+            switch (neighbs.get(it-1).get(2)) {
+                case 1 : next_x = x - 1; next_y = y; break;
+                case 2 : next_x = x + 1; next_y = y; break;
+                case 3 : next_x = x; next_y = y - 1; break;
+                case 4 : next_x = x; next_y = y + 1; break;
+            }
+
+            boolean fin = false;
+
+            switch (res) {
+                case 1 : fin = person.get_carrier().is_sinked(); break;
+                case 2 : fin = person.get_battleship().is_sinked(); break;
+                case 3 : fin = person.get_cruiser().is_sinked(); break;
+                case 4 : fin = person.get_submarine().is_sinked(); break;
+                case 5 : fin = person.get_destroyer().is_sinked(); break;
+            }
+
+            if (fin)
+            {
+                _was_miss = true;
+                neighbs.clear();
+                _last_type= -1;
+                it = 0;
+                next_y = -10;
+                next_x = -10;
+            }
+        }
+        else {
+            person.update_after_hit_enemy(x, y, false);
+            next_x = -10;
+            next_y = -10;
+        }
+
+        pc.past_moves.add(new Quartet(x, y, res == 0 ? false : true, res));
+        comp_ratio.setText(Double.toString((1.0*pc.hits/(40 - pc.remaining_hits))*100) + " %");
+
+    }
+
+    private ArrayList<ArrayList<Integer>> _get_neighbs (int x, int y)
+    {
+        ArrayList<ArrayList<Integer>> neighbs = new ArrayList<>();
+        if (x-1 >= 0)
+            neighbs.add(new ArrayList<Integer>(Arrays.asList(x-1, y, 1)));
+
+        if (x+1 < 10)
+            neighbs.add(new ArrayList<Integer>(Arrays.asList(x+1, y, 2)));
+
+        if (y-1 >= 0)
+            neighbs.add(new ArrayList<Integer>(Arrays.asList(x, y-1, 3)));
+
+        if(y+1 < 10)
+            neighbs.add(new ArrayList<Integer>(Arrays.asList(x, y+1, 4)));
+        return neighbs;
     }
 
 
@@ -325,31 +442,36 @@ public class Grid_controller implements Initializable{
         VBox comp = new VBox();
         String s;
         s = "is hit : " + (pc.get_carrier().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!pc.get_carrier().is_hit() ? "yes\n" : "no\n");
+                (!pc.get_carrier().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (pc.get_carrier().is_sinked() ? "yes\n" : "no\n");
         Text nameField = new Text("Carrier :\n" + s);
         comp.getChildren().add(nameField);
 
         s = "is hit : " + (pc.get_battleship().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!pc.get_battleship().is_hit() ? "yes\n" : "no\n");
+                (!pc.get_battleship().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (pc.get_battleship().is_sinked() ? "yes\n" : "no\n");
         Text name1 = new Text("Battleship :\n" + s);
         comp.getChildren().add(name1);
 
         s = "is hit : " + (pc.get_cruiser().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!pc.get_cruiser().is_hit() ? "yes\n" : "no\n");
+                (!pc.get_cruiser().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (pc.get_cruiser().is_sinked() ? "yes\n" : "no\n");
         Text name4 = new Text("Cruiser :\n" + s);
         comp.getChildren().add(name4);
 
         s = "is hit : " + (pc.get_submarine().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!pc.get_submarine().is_hit() ? "yes\n" : "no\n");
+                (!pc.get_submarine().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (pc.get_submarine().is_sinked() ? "yes\n" : "no\n");
         Text name3 = new Text("Submarine :\n" + s);
         comp.getChildren().add(name3);
 
         s = "is hit : " + (pc.get_destroyer().is_hit() ? "yes\n" : "no \n") + "iis not touched :" +
-                (!pc.get_destroyer().is_hit() ? "yes\n" : "no\n");
+                (!pc.get_destroyer().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (pc.get_destroyer().is_sinked() ? "yes\n" : "no\n");
         Text name2 = new Text("Destroyer :\n" + s);
         comp.getChildren().add(name2);
 
-        Scene stageScene = new Scene(comp, 300, 300);
+        Scene stageScene = new Scene(comp, 300, 400);
         newStage.setTitle("Enemy's Ships");
         newStage.setScene(stageScene);
         newStage.show();
@@ -361,31 +483,36 @@ public class Grid_controller implements Initializable{
         VBox comp = new VBox();
         String s;
         s = "is hit : " + (person.get_carrier().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!person.get_carrier().is_hit() ? "yes\n" : "no\n");
+                (!person.get_carrier().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (person.get_carrier().is_sinked() ? "yes\n" : "no\n");
         Text nameField = new Text("Carrier :\n" + s);
         comp.getChildren().add(nameField);
 
         s = "is hit : " + (person.get_battleship().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!person.get_battleship().is_hit() ? "yes\n" : "no\n");
+                (!person.get_battleship().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (person.get_battleship().is_sinked() ? "yes\n" : "no\n");
         Text name1 = new Text("Battleship :\n" + s);
         comp.getChildren().add(name1);
 
         s = "is hit : " + (person.get_cruiser().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!person.get_cruiser().is_hit() ? "yes\n" : "no\n");
+                (!person.get_cruiser().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (person.get_cruiser().is_sinked() ? "yes\n" : "no\n");
         Text name4 = new Text("Cruiser :\n" + s);
         comp.getChildren().add(name4);
 
         s = "is hit : " + (person.get_submarine().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!person.get_submarine().is_hit() ? "yes\n" : "no\n");
+                (!person.get_submarine().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (person.get_submarine().is_sinked() ? "yes\n" : "no\n");
         Text name3 = new Text("Submarine :\n" + s);
         comp.getChildren().add(name3);
 
         s = "is hit : " + (person.get_destroyer().is_hit() ? "yes\n" : "no \n") + "is not touched :" +
-                (!person.get_destroyer().is_hit() ? "yes\n" : "no\n");
+                (!person.get_destroyer().is_hit() ? "yes\n" : "no\n") + " is sinked :" +
+                (person.get_destroyer().is_sinked() ? "yes\n" : "no\n");
         Text name2 = new Text("Destroyer :\n" + s);
         comp.getChildren().add(name2);
 
-        Scene stageScene = new Scene(comp, 300, 300);
+        Scene stageScene = new Scene(comp, 300, 400);
         newStage.setScene(stageScene);
         newStage.setTitle("Player's Ships");
         newStage.show();

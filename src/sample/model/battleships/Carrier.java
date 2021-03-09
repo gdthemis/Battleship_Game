@@ -1,10 +1,8 @@
 package sample.model.battleships;
 
-import sample.model.Cell;
 import sample.model.Grid;
 import sample.model.Ship;
 import sample.controller.exceptions.*;
-import java.util.ArrayList;
 
 public class Carrier extends Ship {
 
@@ -24,8 +22,6 @@ public class Carrier extends Ship {
 
     public void set (Grid grid, int x, int y, int orientation) throws Exception {
         try {
-//            System.out.println(x);
-//            System.out.println(orientation);
             _adjacent_check(grid, x, y);
 
             if (x > 9 || x < 0 || y > 9 || y < 0)
