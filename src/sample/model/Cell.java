@@ -7,6 +7,9 @@ public class Cell extends Rectangle {
     private boolean isHitted;
     private int contains; // 0 : empty, else ship codename
 
+    // click attempt
+    public int i, j;
+
     public Cell() {
         super(31,31);
         setFill(Color.WHITE);
@@ -14,6 +17,7 @@ public class Cell extends Rectangle {
         isHitted = false;
         contains = 0;
     }
+
 
     public Cell(Cell input) {
         super(31,31);

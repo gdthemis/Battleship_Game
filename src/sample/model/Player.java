@@ -43,6 +43,8 @@ public class Player {
         past_moves = new ArrayList<>();
     }
 
+
+
     private void set_ships(char[][] input) {
         try {
             ArrayList<Integer> seen = new ArrayList<>();

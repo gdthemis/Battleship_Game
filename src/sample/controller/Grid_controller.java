@@ -90,6 +90,8 @@ public class Grid_controller implements Initializable{
     private int _last_type;
     private int it = 0;
 
+    private boolean _game_ended = false;
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -117,8 +119,19 @@ public class Grid_controller implements Initializable{
             alert.showAndWait();
             return;
         }
+
+        if (_game_ended)
+        {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Restart game");
+            alert.setContentText("Game ended restart game ");
+            alert.showAndWait();
+            return;
+        }
+
             update(Integer.parseInt(row_id.getText().toString()), Integer.parseInt(column_id.getText().toString()));
             update_pc();
+
 
             if (pc.remaining_hits == 0)
             {
@@ -126,8 +139,8 @@ public class Grid_controller implements Initializable{
                 alert.setTitle("Your moves ended, player wins");
                 alert.setContentText("Player Won");
                 alert.showAndWait();
+                _game_ended = true;
 
-                javafx.application.Platform.exit();
             }
 
         if (person.remaining_hits == 0)
@@ -136,8 +149,8 @@ public class Grid_controller implements Initializable{
             alert.setTitle("Your moves ended, pc wins");
             alert.setContentText("Pc Won");
             alert.showAndWait();
+            _game_ended = true;
 
-            javafx.application.Platform.exit();
         }
 
         if (person.points == 5200)
@@ -146,8 +159,8 @@ public class Grid_controller implements Initializable{
             alert.setTitle("You won");
             alert.setContentText("You sinked all ships, so you are the winner!");
             alert.showAndWait();
+            _game_ended = true;
 
-            javafx.application.Platform.exit();
         }
 
         if (pc.points == 5200)
@@ -156,8 +169,7 @@ public class Grid_controller implements Initializable{
             alert.setTitle("You lost");
             alert.setContentText("Pc sinked all your ships, so you lose!");
             alert.showAndWait();
-
-            javafx.application.Platform.exit();
+            _game_ended = true;
         }
     }
 
@@ -167,6 +179,16 @@ public class Grid_controller implements Initializable{
             if (has_started) {
                 person = new Player();
                 pc = new Player();
+                it = 0;
+                neighbs.clear();
+                _was_miss = true;
+                next_x = -10;
+                next_y = -10;
+                _game_ended = false;
+                player_points.setText(Integer.toString(person.points));
+                player_ratio.setText(Double.toString((1.0*person.hits/(40 - person.remaining_hits))*100) + " %");
+                comp_ratio.setText(Double.toString((1.0*pc.hits/(40 - pc.remaining_hits))*100) + " %");
+                comp_attempts.setText(Integer.toString(40 - pc.remaining_hits));
 
                 for (int i = 0; i < 10; i++) {
                     for (int j = 0; j < 10; j++) {
@@ -235,7 +257,10 @@ public class Grid_controller implements Initializable{
         if(!_was_miss)
         {
             if (it == neighbs.size())
-                it--;
+            {
+                sink_the_ship(neighbs.get(it-1).get(0),neighbs.get(it-1).get(1),_last_type);
+                return;
+            }
 
             sink_the_ship(neighbs.get(it).get(0),neighbs.get(it).get(1),_last_type);
 
