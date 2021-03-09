@@ -1,41 +1,30 @@
 package sample.controller;
 
-import com.sun.media.jfxmediaimpl.platform.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
-import javafx.stage.Window;
-import sample.model.Cell;
 import sample.model.Grid;
 import sample.model.Player;
 import sample.model.Quartet;
 
 
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
-import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.IntStream;
 
 public class Grid_controller implements Initializable{
 
@@ -93,12 +82,11 @@ public class Grid_controller implements Initializable{
     private boolean _first_move = false;
     private int random;
 
+    private boolean _isLoaded = false;
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        Grid player = new Grid();
-        Grid computer = new Grid();
-
         person = new Player();
         pc = new Player();
 
@@ -119,13 +107,10 @@ public class Grid_controller implements Initializable{
         {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
-            alert.setContentText("You should Start the Game first");
+            alert.setContentText("You should Start and Load the Game first");
             alert.showAndWait();
             return;
         }
-
-
-//        if (random == 0) {
             update(Integer.parseInt(row_id.getText().toString()), Integer.parseInt(column_id.getText().toString()));
             update_pc();
 
@@ -172,33 +157,48 @@ public class Grid_controller implements Initializable{
 
     @FXML
     public void start_controller(javafx.event.ActionEvent e){
-        if (has_started)
-        {
-            person = new Player();
-            pc = new Player();
+        if (_isLoaded) {
+            if (has_started) {
+                person = new Player();
+                pc = new Player();
 
-            for (int i = 0; i < 10; i++) {
-                for (int j = 0; j < 10; j++) {
-                    player_table.add((person.my_grid.get_cell(i, j)), j, i);
-                    enemy_table.add((person.shooting_grid.get_cell(i, j)), j, i);
+                for (int i = 0; i < 10; i++) {
+                    for (int j = 0; j < 10; j++) {
+                        player_table.add((person.my_grid.get_cell(i, j)), j, i);
+                        enemy_table.add((person.shooting_grid.get_cell(i, j)), j, i);
+                    }
                 }
+                _isLoaded = false;
+                has_started = false;
+            }
+
+            if (_isLoaded) {
+
+                random = ThreadLocalRandom.current().nextInt(0, 3);
+                _first_move = true;
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("First Move");
+                if (random == 0)
+                    alert.setContentText("You are playing first");
+                else
+                    alert.setContentText("Computer will play first");
+                alert.showAndWait();
+
+                if (random != 0)
+                    update_pc();
+
+                has_started = true;
+//        _isLoaded = false;
             }
         }
 
-            random= ThreadLocalRandom.current().nextInt(0, 3);
-            _first_move = true;
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("First Move");
-            if (random == 0)
-                alert.setContentText("You are playing first");
-            else
-                alert.setContentText("Computer will play first");
+        else {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("You should load the game scenario first");
+            alert.setContentText("Press Load and then press Start");
             alert.showAndWait();
 
-            if (random != 0)
-                update_pc();
-
-        has_started = true;
+        }
     }
 
     private void update(int x_axis, int y_axis) {
@@ -275,15 +275,29 @@ public class Grid_controller implements Initializable{
         person.set(_player);
         pc.set(_enemy);
 
+        _isLoaded = true;
     }
 
     private char[][] reader (String text, String decider) throws Exception {
         String path = "/Users/georgiosthemelis/IdeaProjects/proj3/project10/src/sample/scenario_" + text;
 
         final File input = new File(path + decider);
+
+        final char[][] world = new char[11][11];
+
+        if(!input.exists())
+        {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("No Such file");
+            alert.setContentText("Enter a file that exists.");
+            alert.showAndWait();
+            world[0][0] = '-';
+
+            return world;
+        }
+
         final BufferedReader br = new BufferedReader(new FileReader(input));
         String temp;
-        final char[][] world = new char[11][11];
         int i = 0;
 
         while ((temp = br.readLine()) != null) {
@@ -336,6 +350,7 @@ public class Grid_controller implements Initializable{
         comp.getChildren().add(name2);
 
         Scene stageScene = new Scene(comp, 300, 300);
+        newStage.setTitle("Enemy's Ships");
         newStage.setScene(stageScene);
         newStage.show();
 
@@ -372,6 +387,7 @@ public class Grid_controller implements Initializable{
 
         Scene stageScene = new Scene(comp, 300, 300);
         newStage.setScene(stageScene);
+        newStage.setTitle("Player's Ships");
         newStage.show();
 
     }
@@ -393,6 +409,7 @@ public class Grid_controller implements Initializable{
 
         Scene stageScene = new Scene(comp, 300, 300);
         newStage.setScene(stageScene);
+        newStage.setTitle("Past Player Moves");
         newStage.show();
 
     }
